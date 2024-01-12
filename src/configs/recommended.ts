@@ -2,6 +2,6 @@
 
 export const recommended = {
   rules: {
-    "reatom/example-rule": "error"
+    "monitolint/no-hollow-catch": "error"
   }
 }

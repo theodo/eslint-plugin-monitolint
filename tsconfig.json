@@ -17,7 +17,8 @@
   },
   "ts-node": {
     "esm": true,
-    "experimentalSpecifierResolution": "node"
+    "experimentalSpecifierResolution": "node",
+    "require": ["tsconfig-paths/register"]
   },
   "include": [
     "src"
