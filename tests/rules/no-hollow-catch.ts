@@ -10,6 +10,22 @@ const tester = new RuleTester({
 });
 
 tester.run("no-hollow-catch", rule, {
-  valid: [],
-  invalid: [],
+  // catch de promise
+  // rethrow
+  valid: [{
+    code: "try { } catch (e) { throw e; }"
+  }, {
+    code: "new Promise((resolve, reject) => { resolve(1) })"
+  },],
+  invalid: [{
+    code: "new Promise((resolve, reject) => { resolve(1) }).catch();",
+    errors: [{
+      message: "Catch clause should have an error parameter",
+    }]
+  }, {
+    code: "try { } catch (e) { }",
+    errors: [{
+      message: "Catch clause should use the error parameter in the catch block",
+    }]
+}],
 });

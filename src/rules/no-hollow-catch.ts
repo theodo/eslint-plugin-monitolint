@@ -10,17 +10,29 @@ const rule: Rule.RuleModule = {
   },
   create(context: Rule.RuleContext): Rule.RuleListener {
     return {
-      TemplateLiteral(node) {
-        context.report({
-          node,
-          message: 'Do not use template literals',
+     CatchClause(node) {
+         if (!node.param) {
+             context.report({
+                 node,
+                 message: 'Catch clause should have an error parameter',
+             });
+             return;
+         }
 
-          fix(fixer) {
-            return [
-              fixer.replaceTextRange(node.range as [number, number], '"'),
-            ];
-          },
-        });
+         if (node.param.type === "Identifier") {
+             const errorArgName = node.param.name;
+             if (node.body.body.some(expression => {
+                 return expression.type === "ExpressionStatement" && expression.expression.type === "CallExpression" &&
+                     expression.expression.arguments.some(argument => argument.type === "Identifier" && argument.name === errorArgName)
+             })) {
+                return;
+             }
+
+             context.report({
+                 node,
+                 message: 'Catch clause should use the error parameter in the catch block',
+             });
+         }
       }
     };
   },
