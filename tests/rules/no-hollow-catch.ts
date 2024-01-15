@@ -10,8 +10,6 @@ const tester = new RuleTester({
 });
 
 tester.run("no-hollow-catch", rule, {
-  // catch de promise
-  // rethrow
   valid: [{
     code: "try { } catch (e) { throw e; }"
   }, {
@@ -20,7 +18,7 @@ tester.run("no-hollow-catch", rule, {
   invalid: [{
     code: "new Promise((resolve, reject) => { resolve(1) }).catch();",
     errors: [{
-      message: "Catch clause should have an error parameter",
+      message: "Promise catch calls should pass a callback handling the error",
     }]
   }, {
     code: "try { } catch (e) { }",

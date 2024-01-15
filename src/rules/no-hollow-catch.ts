@@ -1,41 +1,123 @@
-import { Rule } from "eslint";
+import { Rule } from 'eslint';
+import { BlockStatement } from 'estree';
 
 const rule: Rule.RuleModule = {
   meta: {
     docs: {
-      description: "Catch clauses should use the error to avoid it being lost",
+      description: 'Catch clauses should use the error to avoid it being lost',
       recommended: true,
     },
-    type: "problem"
+    type: 'problem',
   },
   create(context: Rule.RuleContext): Rule.RuleListener {
     return {
-     CatchClause(node) {
-         if (!node.param) {
-             context.report({
-                 node,
-                 message: 'Catch clause should have an error parameter',
-             });
-             return;
-         }
+      // standard try catch block
+      CatchClause(catchClause) {
+        if (!catchClause.param) {
+          context.report({
+            node: catchClause,
+            message: 'Catch clause should have an error parameter',
+          });
+          return;
+        }
 
-         if (node.param.type === "Identifier") {
-             const errorArgName = node.param.name;
-             if (node.body.body.some(expression => {
-                 return expression.type === "ExpressionStatement" && expression.expression.type === "CallExpression" &&
-                     expression.expression.arguments.some(argument => argument.type === "Identifier" && argument.name === errorArgName)
-             })) {
-                return;
-             }
+        if (catchClause.param.type === 'Identifier') {
+          const errorArgName = catchClause.param.name;
+          if (
+            isErrorUsedInACallExpression(catchClause.body, errorArgName) ||
+            isErrorRethrown(catchClause.body, errorArgName)
+          ) {
+            return;
+          }
 
-             context.report({
-                 node,
-                 message: 'Catch clause should use the error parameter in the catch block',
-             });
-         }
-      }
+          context.report({
+            node: catchClause,
+            message:
+              'Catch clause should use the error parameter in the catch block',
+          });
+        }
+      },
+
+      // Promise catch block
+      CallExpression(callExpression) {
+        const callee = callExpression.callee;
+        if (callee.type !== 'MemberExpression') {
+          return;
+        }
+
+        if (callee.property.type !== 'Identifier' || callee.property.name !== 'catch') {
+          return;
+        }
+
+        if (callExpression.arguments.length === 0) {
+          context.report({
+            node: callExpression,
+            message: 'Promise catch calls should pass a callback handling the error',
+          });
+          return;
+        }
+
+        const errorArg = callExpression.arguments[0];
+
+        if (
+          errorArg.type !== 'ArrowFunctionExpression' &&
+          errorArg.type !== 'FunctionExpression'
+        ) {
+          return;
+        }
+
+        if (errorArg.params.length === 0) {
+          context.report({
+            node: callExpression,
+            message: 'Catch clause should have an error parameter',
+          });
+          return;
+        }
+
+        if (errorArg.params[0].type !== 'Identifier') {
+          return;
+        }
+
+        const errorArgName = errorArg.params[0].name;
+
+        if (errorArg.body.type !== 'BlockStatement') {
+          return;
+        }
+
+        if (isErrorUsedInACallExpression(errorArg.body, errorArgName)) {
+          return;
+        }
+
+        context.report({
+          node: callExpression,
+          message:
+            'Catch clause should use the error parameter in the catch block',
+        });
+      },
     };
   },
 };
+
+function isErrorUsedInACallExpression(node: BlockStatement, errorArgName: string) {
+  return node.body.some((expression) => {
+    return (
+      expression.type === 'ExpressionStatement' &&
+      expression.expression.type === 'CallExpression' &&
+      expression.expression.arguments.some(
+        (argument) => argument.type === 'Identifier' &&
+          argument.name === errorArgName
+      )
+    );
+  });
+}
+
+function isErrorRethrown(node: BlockStatement, errorArgName: string) {
+  return node.body.some(
+    (expression) =>
+      expression.type === 'ThrowStatement' &&
+      expression.argument.type === 'Identifier' &&
+      expression.argument.name === errorArgName
+  );
+}
 
 export default rule;
