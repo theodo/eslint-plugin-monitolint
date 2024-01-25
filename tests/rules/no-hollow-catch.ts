@@ -14,7 +14,11 @@ tester.run("no-hollow-catch", rule, {
     code: "try { } catch (e) { throw e; }"
   }, {
     code: "new Promise((resolve, reject) => { resolve(1) })"
-  },],
+  },{
+    code: "of(false).pipe(catchError(() => {return of()}))"
+  },{
+    code: "of(false).subscribe({ next: undefined, error: err => console.error(err) });"
+  }],
   invalid: [{
     code: "new Promise((resolve, reject) => { resolve(1) }).catch();",
     errors: [{
@@ -25,5 +29,16 @@ tester.run("no-hollow-catch", rule, {
     errors: [{
       message: "Catch clause should use the error parameter in the catch block",
     }]
-}],
+},{
+    code: "of(false).pipe(catchError(err => {return of()}))",
+    errors: [{
+      message: "Catch clause should use the error parameter in the catch block",
+    }]
+  },{
+    code: "of(false).subscribe({ next: undefined, error: err => console.error('truc') });",
+    errors: [{
+      message: "Catch clause should use the error parameter in the catch block",
+    }]
+  }
+  ],
 });
