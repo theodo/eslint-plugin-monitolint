@@ -1,5 +1,5 @@
 import { Rule } from 'eslint';
-import { BlockStatement } from 'estree';
+import { BlockStatement, Expression, SpreadElement } from 'estree';
 
 const rule: Rule.RuleModule = {
   meta: {
@@ -104,11 +104,30 @@ function isErrorUsedInACallExpression(node: BlockStatement, errorArgName: string
       expression.type === 'ExpressionStatement' &&
       expression.expression.type === 'CallExpression' &&
       expression.expression.arguments.some(
-        (argument) => argument.type === 'Identifier' &&
-          argument.name === errorArgName
+        (argument) => isIdentifierUsedInExpression(argument, errorArgName)
       )
     );
   });
+}
+
+function isIdentifierUsedInExpression(argument: SpreadElement | Expression, errorArgName: string): unknown {
+  // ex: console.log('error', error);
+  if (argument.type === 'Identifier') {
+    return argument.name === errorArgName;
+  }
+
+  // ex: console.log('error' + error);
+  if (argument.type === 'BinaryExpression') {
+    return isIdentifierUsedInExpression(argument.left, errorArgName) ||
+      isIdentifierUsedInExpression(argument.right, errorArgName);
+  }
+
+  // ex: console.log(error.message);
+  if (argument.type === 'MemberExpression') {
+    return argument.object.type === 'Identifier' && argument.object.name === errorArgName;
+  }
+
+  return false;
 }
 
 function isErrorRethrown(node: BlockStatement, errorArgName: string) {
