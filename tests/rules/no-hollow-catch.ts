@@ -17,9 +17,11 @@ tester.run("no-hollow-catch", rule, {
   }, {
     code: "try { } catch (error) { console.log(error.message) }"
   }, {
+    code: "try { } catch (error) { console.log(\"blabla\" + error.message + \"blabla\") }"
+  },{
     code: "try { } catch (error) { console.log(\"\" + error) }"
   }, /*{
-    code: "try { } catch (error) { console.log(`error ${error}`) }"
+    code: "try { } catch (error) { console.log(`errorstr ${error + error.message} blabla ${err}`) }"
   }*/],
   invalid: [{
     code: "new Promise((resolve, reject) => { resolve(1) }).catch();",
