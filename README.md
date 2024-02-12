@@ -7,7 +7,7 @@ Custom eslint rules to help detect monitoring issues.
 Use [npm](https://www.npmjs.com/) or a compatibility tool to install.
 
 ```
-$ npm install --save-dev eslint monitolint
+$ npm install --save-dev eslint eslint-plugin-monitolint
 ```
 
 ### Requirements
@@ -21,16 +21,16 @@ Write your config file such as `.eslintrc.yml`.
 
 ```yml
 plugins:
-  - xxxx
+  - monitolint
 rules:
-  xxxx/example-rule: error
+  monitolint/no-hollow-catch: error
 ```
 
 See also [Configuring ESLint](https://eslint.org/docs/user-guide/configuring).
 
 ## Configs
 
-- `xxxx/recommended` ... enables the recommended rules.
+- `monitolint/recommended` ... enables the recommended rules.
 
 ## Rules
 
